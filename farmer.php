@@ -82,10 +82,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Farmer</title>
+    <title data-i18n="farmer">Farmer</title>
+    <script src="./js/langcookie.js"></script>
     <link rel="stylesheet" href="css/all.min.css" />
 
-    <link rel="stylesheet" href="css/all_users.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/logout.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -94,6 +95,16 @@
 </head>
 <body>
     <div class="page ">
+        <div class="language">
+                    <div class="language-selected" data-i18n="language">
+                        Language
+                    </div>
+                    <ul>
+                        <li><a href="#" class="en" onclick="changeLanguage('en')" data-i18n="en">English</a></li>
+                        <li><a href="#" class="fr" onclick="changeLanguage('fr')" data-i18n="fr">French</a></li>
+                        <li><a href="#" class="ar" onclick="changeLanguage('ar')" data-i18n="ar">Arabic</a></li>
+                    </ul>
+                </div>
         
         <div class="sidebar">
             <div class="fix-sidebar">
@@ -102,37 +113,37 @@
                     <li>
                     <a class="active" href="farmer.php">
                         <i class="fa-solid fa-house fa-fw"></i>
-                        <span>Home</span>
+                        <span  data-i18n="home">Home</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="farmerProfile.php">
                         <i class="fa-regular fa-user fa-fw"></i>
-                        <span>Profile</span>
+                        <span data-i18n="profile">Profile</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="all_vet.php">
                         <i class="fa-solid fa-user-doctor fa-fw"></i>
-                        <span>veterinarians</span>
+                        <span data-i18n="veterinarian">veterinarians</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="messages.html">
                         <i class="fa-solid fa-comments fa-fw"></i>
-                        <span>Messages</span>
+                        <span data-i18n="messages">Messages</span>
                     </a>
                     </li>
                     <li>
-                    <a class="" href="store.html">
-                        <i class="fa-solid fa-comments fa-fw"></i>
-                        <span>Store</span>
+                    <a class="" href="../Projects/shopify/home.php">
+                        <i class="fa-solid fa-store"></i>
+                        <span data-i18n="store" >Store</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="contact.html">
                         <i class="fa-solid fa-envelope fa-fw"></i>
-                        <span>Contact Us</span>
+                        <span data-i18n="contact" >Contact Us</span>
                     </a>
                     </li>
                 </ul>
@@ -148,7 +159,7 @@
                         
                         <span>@<?php echo $users_d['firstn'] . $users_d['lastn'] ?>
                             <br>
-                            <p>Farmer</p>
+                            <p data-i18n="farmer">Farmer</p>
                         </span>
                     </div>
                 </div>
@@ -161,8 +172,8 @@
             
             <div class="head-box">
                 <div class="title">
-                    <a href="farmer.php" class="active">For you</a>
-                    <a href="all_vet.php" class="">veterinarians</a>
+                    <a href="farmer.php" class="active" data-i18n="forU">For you</a>
+                    <a href="all_vet.php" class="" data-i18n="veterinarian">veterinarians</a>
                     <span class="notification">
                         <i class="fa-regular fa-bell fa-lg"></i>
                     </span>
@@ -174,7 +185,7 @@
                         <div class="text">
                             <img src="<?php echo $image; ?>" alt="">
                             <div class="input-field">
-                                <textarea name="post" cols="1" rows="1" placeholder="What's new"></textarea>
+                                <textarea name="post" cols="30" rows="3" placeholder="What's new"></textarea>
                             </div>
                         </div>
                         <div class="posting">
@@ -221,7 +232,7 @@
                     <input class="p-10" type="search" placeholder="Type A Keyword" />
                     <button class="Btn">
                         <div class="sign"><svg viewBox="0 0 512 512"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path></svg></div>
-                        <a href="logout.php" class="text" >Logout</a>
+                        <a href="logout.php" class="text" data-i18n="logout">Logout</a>
                     </button>
                 </div>
             </div>
@@ -234,6 +245,33 @@
         </div>
     </div>
     
+    <script>
+        // JavaScript to dynamically switch photos based on screen size
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 767) {
+                // Large media screen
+                document.getElementById('img1').style.display = 'block';
+                document.getElementById('img2').style.display = 'none';
+            } else {
+                // Small media screen
+                document.getElementById('img1').style.display = 'none';
+                document.getElementById('img2').style.display = 'block';
+            }
+        });
 
+        // Initial check on page load
+        if (window.innerWidth >= 767) {
+            document.getElementById('img1').style.display = 'block';
+            document.getElementById('img2').style.display = 'none';
+        } else {
+            document.getElementById('img1').style.display = 'none';
+            document.getElementById('img2').style.display = 'block';
+        }
+
+        
+    </script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js" type="text/javascript"></script>
+    <script src="js/script.js"></script>-->
+    <script src="js/script.js"></script>
 </body>
 </html>
