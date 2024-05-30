@@ -45,12 +45,12 @@
     }
     $error_msg = "";
 
-    //Start posts
     if($_SERVER['REQUEST_METHOD'] == "POST"){
 
         $post = new Posts();
         $id = $_SESSION['users_id'];
-        $result = $post->create_post($id, $_POST);
+        // Pass $_FILES along with $_POST to create_post method
+        $result = $post->create_post($id, $_POST, $_FILES);
 
         if($result == ""){
             header("Location: veterinary.php");
@@ -78,7 +78,7 @@
     <title>Veterinary</title>
     <link rel="stylesheet" href="css/all.min.css" />
 
-    <link rel="stylesheet" href="css/all_users.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/logout.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -87,54 +87,64 @@
 </head>
 <body>
     <div class="page ">
+    <div class="language">
+                    <div class="language-selected" data-i18n="language">
+                        Language
+                    </div>
+                    <ul>
+                        <li><a href="#" class="en" onclick="changeLanguage('en')" data-i18n="en">English</a></li>
+                        <li><a href="#" class="fr" onclick="changeLanguage('fr')" data-i18n="fr">French</a></li>
+                        <li><a href="#" class="ar" onclick="changeLanguage('ar')" data-i18n="ar">Arabic</a></li>
+                    </ul>
+                </div>
         
         <div class="sidebar">
             <div class="fix-sidebar">
                 <h3 class="title">FarmVet</h3>
                 <ul>
                     <li>
-                    <a class="active" href="index.html">
+                    <a class="active" href="veterinary.php">
                         <i class="fa-solid fa-house fa-fw"></i>
-                        <span>Home</span>
+                        <span data-i18n="home">Home</span>
                     </a>
                     </li>
                     <li>
-                    <a class="" href="profile.html">
+                    <a class="" href="veterinaryProfile.php">
                         <i class="fa-regular fa-user fa-fw"></i>
-                        <span>Profile</span>
-                    </a>
-                    </li>
-                    <li>
-                    <a class="" href="projects.html">
-                        <i class="fa-solid fa-user-doctor fa-fw"></i>
-                        <span>veterinarians</span>
+                        <span data-i18n="profile">Profile</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="messages.html">
                         <i class="fa-solid fa-comments fa-fw"></i>
-                        <span>Messages</span>
+                        <span data-i18n="messages">Messages</span>
                     </a>
                     </li>
                     <li>
-                    <a class="" href="store.html">
-                        <i class="fa-solid fa-comments fa-fw"></i>
-                        <span>Store</span>
+                    <a class="" href="/farmvet/Projects/shop/admin/dashboard.php">
+                        <i class="fa-solid fa-store"></i>
+                        <span data-i18n="store">Store</span>
                     </a>
                     </li>
                     <li>
                     <a class="" href="contact.html">
                         <i class="fa-solid fa-envelope fa-fw"></i>
-                        <span>Contact Us</span>
+                        <span data-i18n="contact">Contact Us</span>
                     </a>
                     </li>
                 </ul>
                 <div class="box">
-                    <img src="imgs/skills-02.jpg" alt="">
+                    <?php
+                        $image = "imgs/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg";
+                        if(file_exists($users_d['image'])){
+                            $image = $users_d['image'];
+                        }
+                    ?>
+                    <img src="<?php echo $image; ?>" alt="">
                     <div class="info">
                         <span>@<?php echo $users_d['firstn'] . $users_d['lastn'] ?>
                             <br>
-                            <p>Farmer</p>
+                            <p data-i18n="veterinary">Veterinary</p>
                         </span>
                     </div>
                 </div>
@@ -147,8 +157,8 @@
             
             <div class="head-box">
                 <div class="title">
-                    <a href="veterinary.php" class="active">For You</a>
-                    <a href="contact.php"> Contact Us</a>
+                    <a href="veterinary.php" class="active" data-i18n="forU">For You</a>
+                    <a href="contact.php" data-i18n="contact"> Contact Us</a>
                     <span class="notification">
                         <i class="fa-regular fa-bell fa-lg"></i>
                     </span>
@@ -156,9 +166,9 @@
             </div>
             <div class="body-box">
                 <div class="post">
-                    <form method="post">
+                <form method="post" enctype="multipart/form-data">
                         <div class="text">
-                            <img src="imgs/skills-01.jpg" alt="">
+                            <img src="<?php echo $image; ?>" alt="">
                             <div class="input-field">
                                 <textarea name="post" cols="1" rows="1" placeholder="What's new"></textarea>
                             </div>
@@ -166,7 +176,7 @@
                         <div class="posting">
                             <div class="icons">
                                 <div class="input-div">
-                                    <input type="file">
+                                    <input name="image" type="file">
                                 </div>
                                 <i class="fa-solid fa-face-smile-beam"></i>
                             </div>
@@ -189,6 +199,8 @@
 
                             $users = new users_data();
                             $row_users = $users->get_info_post($row['user_id']);
+                            $row_farmer = $users->get_farmer_data($row['user_id']);
+                            $row_vet = $users->get_vet_data($row['user_id']);
 
                             include("post.php");
                         }
@@ -205,7 +217,7 @@
                     <input class="p-10" type="search" placeholder="Type A Keyword" />
                     <button class="Btn">
                         <div class="sign"><svg viewBox="0 0 512 512"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path></svg></div>
-                        <a href="logout.php" class="text" >Logout</a>
+                        <a href="logout.php" class="text" data-i18n="logout">Logout</a>
                     </button>
                 </div>
             </div>
@@ -215,6 +227,33 @@
         </div>
     </div>
     
+    <script>
+        // JavaScript to dynamically switch photos based on screen size
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 767) {
+                // Large media screen
+                document.getElementById('img1').style.display = 'block';
+                document.getElementById('img2').style.display = 'none';
+            } else {
+                // Small media screen
+                document.getElementById('img1').style.display = 'none';
+                document.getElementById('img2').style.display = 'block';
+            }
+        });
 
+        // Initial check on page load
+        if (window.innerWidth >= 767) {
+            document.getElementById('img1').style.display = 'block';
+            document.getElementById('img2').style.display = 'none';
+        } else {
+            document.getElementById('img1').style.display = 'none';
+            document.getElementById('img2').style.display = 'block';
+        }
+
+        
+    </script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js" type="text/javascript"></script>
+    <script src="js/script.js"></script>-->
+    <script src="js/script.js"></script>
 </body>
 </html>
