@@ -1,42 +1,116 @@
 <?php
-session_start();
-include("classes/connect.php");
-include("classes/log-in.php");
+    session_start();
+    include("classes/connect.php");
+    include("classes/log-in.php");
+    include("classes/users_data.php");
 
-// Check if the user is logged in
-if (isset($_SESSION['farmer_user_id']) && is_numeric($_SESSION['farmer_user_id'])) {
 
-    $id = $_SESSION['farmer_user_id'];
-    $login = new login();
-    $result = $login->check_login($id);
+    // Check if the user is logged in
+    if (isset($_SESSION['users_id']) && is_numeric($_SESSION['users_id'])) {
 
-    if (is_array($result) && array_key_exists('error', $result)) {
-        // Handle the error case
-        echo "Error: " . $result['error'];
-    } elseif ($result) {
-        $type = $result['type'];
+        $id = $_SESSION['users_id'];
+        $login = new login();
+        $result = $login->check_login($id);
 
-        // Redirect based on user type
-        if ($type === 'farmer') {
-            header("Location: FarmerProfile.php");
-            die;
-        } elseif ($type === 'veterinary') {
-            
+        if (is_array($result) && array_key_exists('error', $result)) {
+            // Handle the error case
+            echo "Error: " . $result['error'];
+        } elseif ($result) {
+            $type = $result['type'];
+
+            // Redirect based on user type
+            if ($type === 'farmer') {
+                header("Location: farmer.php");
+                die;
+            } elseif ($type === 'veterinary') {
+
+                $users = new users_data();
+                $users_d = $users -> get_vet_data($id);
+
+                if(!$users_d){
+                    header("Location: log-in.php");
+                    die;
+                }
+            } else {
+                // Handle other user types or show an error
+                echo "Unknown user type!";
+            }
         } else {
-            // Handle other user types or show an error
-            echo "Unknown user type!";
+            header("Location: log-in.php");
+            die;
         }
     } else {
         header("Location: log-in.php");
         die;
     }
-} else {
-    header("Location: log-in.php");
-    die;
-}
+    $error_msg = "";
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST" ) {
+
+        $firstn = $_POST['firstn'];
+        $lastn = $_POST['lastn'];
+        $mail = $_POST['mail'];
+        $password = $_POST['password'];
+        $date = $_POST['date_birth'];
+        $loc = $_POST['location'];
+        $bio = $_POST['bio'];
+
+        $targetDir = "uploads/"; // Directory where images will be stored
+        $targetFile = $targetDir . basename($_FILES["image"]["name"]);
+        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    
+        // Check if image file is a actual image or fake image
+        if ($_FILES["image"]["tmp_name"]) {
+            $check = getimagesize($_FILES["image"]["tmp_name"]);
+            if ($check !== false) {
+                // Image is valid, move it to the target directory
+                move_uploaded_file($_FILES["image"]["tmp_name"], $targetFile);
+                $imagePath = $targetFile; // Save the path of the uploaded image
+            } else {
+                echo "Error: File is not an image.";
+                exit;
+            }
+        } else {
+            $imagePath = ""; // No image uploaded, set image path to empty
+        }
+
+
+        $userid = $users_d['user_id'];
+        if(!empty($imagePath)){
+            $query = "UPDATE veterinary 
+                    SET firstn='$firstn', lastn='$lastn', mail='$mail',password='$password',
+                        date_birth='$date', location='$loc', bio='$bio', image='$imagePath' 
+                    WHERE user_id='$userid' LIMIT 1";
+        }
+        else {
+        $query = "UPDATE veterinary 
+                    SET firstn='$firstn', lastn='$lastn', mail='$mail',
+                    password='$password', date_birth='$date', location='$loc', bio='$bio' 
+                    WHERE user_id='$userid' LIMIT 1";
+        }
+
+        $query2 = "UPDATE users 
+                    SET firstn='$firstn', lastn='$lastn', mail='$mail',
+                    password='$password' WHERE user_id='$userid' LIMIT 1";
+
+        $db = new Database();
+        $db->save($query); 
+        $db->save($query2);
+        header("Location: veterinaryProfile.php");
+        exit;
+
+    }
+    
+    
+    $image = "imgs/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg";
+    if(file_exists($users_d['image'])){
+        $image = $users_d['image'];
+    }
+
+
+
+
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -44,12 +118,12 @@ if (isset($_SESSION['farmer_user_id']) && is_numeric($_SESSION['farmer_user_id']
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
+    <title>veterinary Profile</title>
     <link rel="stylesheet" href="css/all.min.css" />
-    <link rel="stylesheet" href="css/FarmerP.css" />
 
-    <link rel="stylesheet" href="css/testcss">
-    <link rel="stylesheet" href="css/framecss">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/logout.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,95 +131,261 @@ if (isset($_SESSION['farmer_user_id']) && is_numeric($_SESSION['farmer_user_id']
 </head>
 <body>
     <div class="page ">
-        <div class="sidebar">
-        <h3 class="title">FarmVet</h3>
-        <ul>
-            <li>
-            <a class="active" href="index.html">
-                <i class="fa-solid fa-house fa-fw"></i>
-                <span>Home</span>
-            </a>
-            </li>
-            <li>
-            <a class="" href="profile.html">
-                <i class="fa-regular fa-user fa-fw"></i>
-                <span>Profile</span>
-            </a>
-            </li>
-            <li>
-            <a class="" href="projects.html">
-                <i class="fa-solid fa-user-doctor fa-fw"></i>
-                <span>veterinarians</span>
-            </a>
-            </li>
-            <li>
-            <a class="" href="messages.html">
-                <i class="fa-solid fa-comments fa-fw"></i>
-                <span>Messages</span>
-            </a>
-            </li>
-            <li>
-            <a class="" href="contact.html">
-                <i class="fa-solid fa-envelope fa-fw"></i>
-                <span>Contact Us</span>
-            </a>
-            </li>
-        </ul>
-        </div>
-        <div class="content">
-        <!-- Start Head -->
-        <div class="head">
-            <div class="search ">
-            <input class="p-10" type="search" placeholder="Type A Keyword" />
-            </div>
-            <div class="icons">
-            <span class="notification">
-                <i class="fa-regular fa-bell fa-lg"></i>
-            </span>
-            <img decoding="async" src="imgs/skills-02.jpg" alt="" />
-            </div>
-        </div>
-        <!-- End Head -->
-        <h1 class="">Home</h1>
-        
-        <!-- Start Welcome Widget -->
-        <div class="post-content">
-            <div class="intro">
-            <div>
-                <h2 >Welcome</h2>
-                <p >the profile name</p>
-            </div>
-            <img decoding="async" class="hide-mobile" src="imgs/welcome.png" alt="" />
-            </div>
-            <img decoding="async" src="imgs/skills-01.jpg" alt="" class="avatar" />
-            <form action="post">
-            <textarea class=" text-post d-block mb-20 w-full p-10 b-none bg-eee rad-6" placeholder="Your Thought"></textarea>
-            <label class="custum-file-upload" for="file">
-                <div class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24"><g stroke-width="0" id="SVGRepo_bgCarrier"></g><g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g><g id="SVGRepo_iconCarrier"> <path fill="" d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z" clip-rule="evenodd" fill-rule="evenodd"></path> </g></svg>
-                </div>
-                <div class="text">
-                    <span>Click to upload image</span>
+    <div class="language">
+                    <div class="language-selected" data-i18n="language">
+                        Language
                     </div>
-                    <input type="file" id="file">
-                </label>
-                
-            </form>
-            <button>post</button>
-        </div>
-        <!-- End Welcome Widget -->
-
-
-        <!-- Start Projects Table -->
-        <div class="projects p-20 bg-white rad-10 m-20">
-            <h2 class="mt-0 mb-20">the name</h2>
-            <div class="responsive-table">
-            
+                    <ul>
+                        <li><a href="#" class="en" onclick="changeLanguage('en')" data-i18n="en">English</a></li>
+                        <li><a href="#" class="fr" onclick="changeLanguage('fr')" data-i18n="fr">French</a></li>
+                        <li><a href="#" class="ar" onclick="changeLanguage('ar')" data-i18n="ar">Arabic</a></li>
+                    </ul>
+                </div>
+        
+        <div class="sidebar">
+            <div class="fix-sidebar">
+                <h3 class="title">FarmVet</h3>
+                <ul>
+                    <li>
+                    <a class="" href="veterinary.php">
+                        <i class="fa-solid fa-house fa-fw"></i>
+                        <span data-i18n="home">Home</span>
+                    </a>
+                    </li>
+                    <li>
+                    <a class="active" href="veterinaryProfile.php">
+                        <i class="fa-regular fa-user fa-fw"></i>
+                        <span data-i18n="profile">Profile</span>
+                    </a>
+                    </li>
+                    <li>
+                    <a class="" href="messages.html">
+                        <i class="fa-solid fa-comments fa-fw"></i>
+                        <span data-i18n="messages">Messages</span>
+                    </a>
+                    </li>
+                    <li>
+                    <a class="" href="/farmvet/Projects/fvstore/admin/dashboard.php">
+                        <i class="fa-solid fa-store"></i>
+                        <span data-i18n="store">Store</span>
+                    </a>
+                    </li>
+                    <li>
+                    <a class="" href="contact.html">
+                        <i class="fa-solid fa-envelope fa-fw"></i>
+                        <span data-i18n="contact">Contact Us</span>
+                    </a>
+                    </li>
+                </ul>
+                <div class="box">
+                    <img src="<?php echo $image; ?>" alt="">
+                    <div class="info">
+                        <span>@<?php echo $users_d['firstn'] . $users_d['lastn'] ?>
+                            <br>
+                            <p data-i18n="veterinary">veterinary</p>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- End Projects Table -->
+    
+        <div class="content">
+
+        <div class="box1">
+            
+            <div class="head-box">
+                <div class="title">
+                    <a href="veterinary.php" class="" data-i18n="home">Home</a>
+                    <a href="veterinaryProfile.php" class="active" data-i18n="UrProfile">Your Profile</a>
+                    <span class="notification">
+                        <i class="fa-regular fa-bell fa-lg"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="body-box">
+                
+                <?php
+                    echo "<div style='color: red;font-size: 16px;font-weight: bold;margin: 50px';>";
+                    echo $error_msg ;
+                    echo "</div>";
+                ?>
+                <div class="card" id="card">
+
+                    <div class="info">
+                    <img src="<?php echo $image; ?>" alt="">
+                    <h2><?php echo $users_d['firstn'] . " " . $users_d['lastn'] ?></h2>
+                    <p data-i18n="veterinary">veterinary</p>
+                    </div>
+
+                    <div class="text">
+                        <span data-i18n="YourID">Your Id:</span>
+                        <p><?php echo $users_d['user_id'] ?></p>
+                    </div>
+                    <div class="text">
+                        <span data-i18n="bio">Bio:</span>
+                        <p><?php echo $users_d['bio']?></p>
+                    </div>
+                    <div class="text">
+                        <span data-i18n="e_mail">E-mail:</span>
+                        <p><?php echo $users_d['mail']?></p>
+                    </div>
+                    <div class="text">
+                        <span data-i18n="dob">Date of birth:</span>
+                        <p><?php echo $users_d['date_birth']?></p>
+                    </div>
+                    <div class="text">
+                        <span data-i18n="location">location:</span>
+                        <p><?php echo $users_d['location'] ?></p>
+                    </div>
+
+                    <input id="showupdatecard" type="submit" class="button" value="Update">
+                    
+
+                </div>
+
+                <form action="#" method="POST" enctype="multipart/form-data">
+                
+
+                <div class="update-card" id="update-card">
+                    <span id="close-card" class="close-icon">
+                        <i class="fa-solid fa-xmark"></i>
+                    </span>
+                    <h1 data-i18n="updateInfo">Update Your Info</h1>
+                    
+
+                    <div class="lab">
+                        <label data-i18n="newImg">The New Image:</label>
+                        
+                            <input class="upload" type="file" name="image" >
+
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label data-i18n="fname">First Name:</label>
+                        <input type="text" name="firstn" value="<?php echo $users_d['firstn'] ?>">
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label data-i18n="lname">Last Name:</label>
+                        <input type="text" name="lastn" value="<?php echo $users_d['lastn'] ?>">
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label >bio:</label>
+                        <textarea name="bio" cols="30" rows="3">
+                        <?php echo $users_d['bio']; ?>
+                        </textarea>
+                        
+                    </div>
+                    <br>
+                    
+
+                    <div class="lab">
+                        <label data-i18n="e_mail">Email:</label>
+                        <input type="mail" name="mail" value="<?php echo $users_d['mail'] ?>">
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label data-i18n="password">Password:</label>
+                        <input type="password" name="password" value="<?php echo $users_d['password'] ?>">
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label data-i18n="dob">date of birth</label>
+                        <input type="date" name="date_birth" value="<?php echo $users_d['date_birth'] ?>">
+                    </div>
+                    <br>
+
+                    <div class="lab">
+                        <label for="location" data-i18n="location">location:</label>
+                        <input type="text" name="location" value="<?php echo $users_d['location'] ?>">
+                    </div>
+                    <br>
+
+
+                    <input class="button" type="submit" name="update" value="Update">
+                    
+                </div>
+
+                </form>
+
+            </div>
+        </div>
+
+        <div class="box2">
+            <div class="head-box">
+                <div class="search ">
+                    <input class="p-10" type="search" placeholder="Type A Keyword" />
+                    <button class="Btn">
+                        <div class="sign"><svg viewBox="0 0 512 512"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path></svg></div>
+                        <a href="logout.php" class="text" ata-i18n="logout">Logout</a>
+                    </button>
+                </div>
+            </div>
+            <div class="body-box">
+                
+            </div>
+
+        </div>
         
         </div>
     </div>
+
+    <script>
+
+            const card = document.getElementById('card');
+            const updateCard = document.getElementById('update-card');
+            const showupdatecard = document.getElementById('showupdatecard');
+            const hide = document.getElementById('close-card');
+            showupdatecard.addEventListener('click', function (event) {
+            
+                event.preventDefault();
+                updateCard.style.display = 'block';
+            });
+
+            hide.addEventListener('click', function (event) {
+            
+            event.preventDefault();
+            updateCard.style.display = 'none';
+            });
+
+
+
+    </script>
+
+     <script>
+        // JavaScript to dynamically switch photos based on screen size
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 767) {
+                // Large media screen
+                document.getElementById('img1').style.display = 'block';
+                document.getElementById('img2').style.display = 'none';
+            } else {
+                // Small media screen
+                document.getElementById('img1').style.display = 'none';
+                document.getElementById('img2').style.display = 'block';
+            }
+        });
+
+        // Initial check on page load
+        if (window.innerWidth >= 767) {
+            document.getElementById('img1').style.display = 'block';
+            document.getElementById('img2').style.display = 'none';
+        } else {
+            document.getElementById('img1').style.display = 'none';
+            document.getElementById('img2').style.display = 'block';
+        }
+
+        
+    </script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js" type="text/javascript"></script>
+    <script src="js/script.js"></script>-->
+    <script src="js/script.js"></script>
+
 </body>
 </html>
