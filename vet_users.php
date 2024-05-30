@@ -1,8 +1,16 @@
-
+<?php
+    $image = "imgs/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg";
+?>
 
 
                 <div class="box">
-                    <img src="imgs/skills-01.jpg" alt="">
+                    <img src="<?php if(empty($vet_row['image'])){
+                                        echo $image;
+                                    }
+                                    else {
+                                        echo $vet_row['image'];
+                                    } ?>" 
+                    alt="">
                     <h2><?php echo $vet_row['firstn'] . " " . $vet_row['lastn'] ?></h2>
                     <span class="title">Veterinarian</span>
                     <span class="rate">
@@ -12,10 +20,10 @@
                         <i class="filled fas fa-star"></i>
                         <i class="far fa-star"></i>
                     </span>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores et reiciendis voluptatum,</p>
+                    <p><?php echo $vet_row['bio']; ?></p>
 
                     <div class="info">
-                        <a class="show-profile" id="show-profile" href="">Read More</a>
+                        <a class="show-profile" id="show-profile" href="" data-i18n="read">Read More</a>
                         <i class="fas fa-long-arrow-alt-right"></i>
                     </div>   
                 </div>
@@ -31,11 +39,16 @@
                         <i class="fa-solid fa-xmark"></i>
                     </span>
                     <div class="img-box">
-                        <img src="imgs/1000_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg" alt="">
+                        <img src="<?php if(empty($vet_row['image'])){
+                                        echo $image;
+                                    }
+                                    else {
+                                        echo $vet_row['image'];
+                                    } ?>" alt="">
                     </div>
                     <div class="info-box">
                         <h2>Dr.<?php echo $vet_row['firstn'] . " " . $vet_row['lastn'] ?></h2>
-                        <p>veterinary</p>
+                        <p data-i18n="veterinary">veterinary</p>
                         <span class="rate">
                             <i class="filled fas fa-star"></i>
                             <i class="filled fas fa-star"></i>
@@ -45,9 +58,9 @@
                         </span>
                         <div class="location">
                             <i class="fa-solid fa-location-dot"></i>
-                            <span>Sidi Bel Abbes - Sidi Bel Abbes</span>
+                            <span><?php echo $vet_row['location']; ?></span>
                         </div>
-                        <span>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Optio, error eligendi ex facilis, aliquid impedit eaque perferendis eos earum explicabo fugiat laborum repellendus tenetur a excepturi nesciunt iusto doloribus iure.</span>
+                        <span><?php echo $vet_row['bio']; ?></span>
                         <input type="submit" class="button" value="contact">
                         
                     </div>
